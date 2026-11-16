@@ -28,7 +28,7 @@ Success: an internal document that has already passed visual review is rebuilt w
 - **Writers** in every team, mostly writing in English and a few in Thai, such as product engineering and operations, who write Markdown and never lay out pages.
 - **Readers** inside the company, partners and investors, who get documents that are easy to read and look alike.
 - **Design-system owner**, who changes a colour or font in one place.
-- **Claude Code** in every company repository, through the skill.
+- **Claude** in every company repository, through the skill.
 - **Systems used:** Vivliostyle (CSS paged media), Chromium, Python, Node.js, free fonts from Google Fonts.
 
 ## Constraints
@@ -41,7 +41,7 @@ Success: an internal document that has already passed visual review is rebuilt w
   - Vertical centring counts the marks above and below the letters.
   - Line breaks use the browser's Thai dictionary.
   - Thai glyphs always come from the bundled Thai fonts, at a size and baseline that match the Latin text on the same line.
-- **Fonts and art must allow commercial use.** Fonts are under the SIL Open Font License, with their licence files kept. Art is drawn new and copies no other brand.
+- **Fonts and art must allow commercial use.** Fonts in the repository are under the SIL Open Font License, with their licence files kept. Commercial fonts are never committed; the user supplies them from a local folder outside the repository. Art is drawn new and copies no other brand.
 - **No logos, names or images of other brands**, even where another brand's book is the inspiration.
 - **The source wording never changes.** The tool changes layout only.
 - **Keep cost low:** build a few sample pages for review first, then the whole document.
@@ -51,8 +51,9 @@ Success: an internal document that has already passed visual review is rebuilt w
 
 1. Keep the existing MIT licence? Publish the Next Friday brand (colours, logo) as the default theme, or ship a neutral default theme and keep the Next Friday theme as the company's own setting?
 2. The NEXT FRIDAY wordmark currently uses the free font Barlow Condensed. Does the company have a real logo file (SVG) or a licensed font for it?
-3. How is the skill installed in every project: as a Claude Code plugin from this repository, or by copying the skill folder into each repository?
+3. How is the skill installed in every project: as a Claude plugin from this repository, or by copying the skill folder into each repository?
 4. Are scripts other than English and Thai needed, such as Japanese or Chinese?
-5. Paper size: A4 only, or also Letter and a landscape layout for slides?
+5. Paper size: the default is US Letter with A4 as an option. Is a landscape layout for slides needed?
 6. Who owns the design-system file, and who approves changes to it?
 7. Are more page types needed, such as two side-by-side comparison boxes, call-out boxes, or a signature page?
+8. Where are the company's licensed fonts stored, and who manages their licences, including whether PDF embedding is allowed?
