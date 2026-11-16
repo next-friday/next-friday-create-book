@@ -6,7 +6,7 @@ Not started. Work starts once the owner answers open questions 1 to 3 in the int
 
 ## Approach
 
-A smaller model agent does the building; the main Claude session plans and reviews. Every step ends with a few sample pages for the owner to review. Nothing is built at full length before approval.
+An agent builds the tool quickly, with a smaller model doing the building and the main Claude session planning and reviewing. Speed is not the constraint. Quality is gated by sample pages and automated checks that the owner reviews. Every step ends with a few sample pages for the owner. Nothing is built at full length before approval.
 
 The starting point is a prototype script made for one internal document. It contains parts tied to internal content, so it is not copied in. The tool is rewritten from the spec, taking the method and none of the content.
 
@@ -20,13 +20,21 @@ The starting point is a prototype script made for one internal document. It cont
 | 4 | Art generator with the eight base shapes (section 6) | `nf-docs art` produces all eight shapes, and part openers take their shape from front matter |
 | 5 | `nf-docs check` (section 9) | The reference document (locally) and the sample document pass every check |
 | 6 | Write the skill and the README | In another repository, Claude asked to "make a PDF from this file" follows the skill: shows samples first, runs the check, and does not touch this repository |
-| 7 | An independent reviewer agent scores the samples against the approved reference | The score is no lower than the approved reference. Before opening the PR, scan the whole repository for trade secrets and real names, then let the owner merge |
+| 7 | Update the tokens to the measured defaults (spec section 3): US Letter, 72 pt side margins, the new sizes and pitches, the three font roles and the measured colours | `nf-docs preview` shows the new defaults, and a sample page matches the targets within 1 pt |
+| 8 | `nf-docs compare` (spec section 2): measure a reference PDF, write measured values next to the tokens, render side-by-side images | Run on a made-up reference, it reports edges, pitches, title sizes, footer position and contents row pitch, and renders one image per page type |
+| 9 | `nf-docs fonts` (spec section 2): candidate scoring for serif, sans and mono, and the mixed Thai and Latin visual mode with the mark-collision check | The score table and comparison image are produced, and a deliberately colliding Thai line is caught |
+| 10 | Bring-your-own commercial fonts: local config, `.gitignore` entries for the local fonts folder and config, and the documentation for the skill | A font in a folder outside the repository is used in a build, and no font file or config shows up as an untracked file to commit |
+| 11 | Add the new checks (spec section 9): measured values, baseline movement, Thai marks at 300 dpi, font licences and embedding | All checks pass on the sample document, and each fails on a deliberately broken input |
+| 12 | An independent reviewer agent scores the samples against the approved reference | The score is no lower than the approved reference. Before opening the PR, scan the whole repository for trade secrets and real names, then let the owner merge |
 
-## Cost and time (estimate)
+## Cost (estimate)
+
+Agent cost only, as an estimate:
 
 - Steps 1–3: USD 3–6
-- Steps 4–7: USD 2–4
-- Total: USD 5–10, about 1–2 hours of work, not counting time waiting for the owner's review
+- Steps 4–6 and 12: USD 2–4
+- Steps 7–11: USD 3–6
+- Total: USD 8–16
 
 ## Risks
 
@@ -36,3 +44,4 @@ The starting point is a prototype script made for one internal document. It cont
 | A newer Vivliostyle or Chromium lays pages out differently | Pin versions and keep reference images of the samples for comparison |
 | A document with a new table shape gets the wrong block style | Tables that match no pattern stay tables, and authors can pick the style with a comment |
 | Real content or a trade secret is committed to the open-source repository | The skill forbids it, `.gitignore` excludes PDFs and output folders, and a forbidden-words check runs before commit |
+| A commercial font file is committed by mistake | The fonts folder and the local config are git-ignored, and the check fails if any non-OFL font file is present |

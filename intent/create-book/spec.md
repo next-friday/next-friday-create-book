@@ -2,14 +2,14 @@
 
 Status: draft. Based on [intent.md](intent.md).
 
-This document says what the tool must do and what the result must look like. Every number is a default that has been tested on a long document of about 90 pages, including Thai text. All of them can be changed in the design-system file.
+This document says what the tool must do and what the result must look like. Every number is a default that has been tested on a long document of about 90 pages, including Thai text. The sizes, margins and pitches were measured from a reference layout (section 6a). All of them can be changed in the design-system file.
 
 ## 1. Repository layout
 
 ```
 brand/
   tokens.json          every design value (section 3)
-  fonts/               .woff2 font files and the OFL licence of each font
+  fonts/               .woff2 font files under the SIL OFL only, with the licence file of each font
   logo/                logo files, if any; otherwise the wordmark is set in the logo font
 tool/
   nf_docs/             code that turns Markdown into HTML, and CSS generated from the tokens
@@ -22,8 +22,11 @@ skills/nf-docs/
 examples/
   sample.md            made-up document that uses every page type
 README.md              installation and use
+.gitignore             covers the local fonts folder and the local config (below)
 intent/                intent, spec and plan
 ```
+
+Commercial fonts are "bring your own". The user points to a local folder outside the repository (or a folder listed in `.gitignore`) from a local config file, and that config file is itself git-ignored. The tool never copies commercial font files into the repository or into examples. `.gitignore` must cover the local fonts folder and the local config file.
 
 ## 2. Commands
 
@@ -34,6 +37,8 @@ intent/                intent, spec and plan
 | `nf-docs preview` | A 1–2 page PDF showing the whole design system: colours, fonts, type sizes, spacing, badges, blocks and art |
 | `nf-docs check <out.pdf>` | Runs the checks in section 9 and reports |
 | `nf-docs art <shape> --bg <colour>` | Hand-drawn art as SVG |
+| `nf-docs compare <reference.pdf> [--pages ...]` | Measures the reference with text bounding boxes (left and right edges, line pitches, title sizes, footer position, contents row pitch), writes the measured values next to the current tokens, and renders side-by-side images (reference left, ours right) for each page type |
+| `nf-docs fonts --role serif\|sans\|mono --candidates a,b,c [--reference ref.pdf]` | Renders the same strings at the same cap height in each candidate and in crops from the reference. Measures x-height and cap height, set width per cap height, stem thickness per cap height and stroke contrast. Prints a score table (mean relative difference, lower is closer) and writes a comparison image. For Thai, which a Latin reference cannot measure, it renders mixed Thai and Latin lines for a visual choice and runs the mark-collision check (section 5.5) |
 
 Every command works offline after installation.
 
@@ -43,18 +48,21 @@ Every visual value comes from this file. Code and CSS hold no hard-coded values.
 
 | Group | Values | Default |
 | --- | --- | --- |
-| color | ink, ink2, ink3, paper, panel, line, accent, accentText, cover | #1f1e1d, #5e5d59, #8f8d87, #faf9f5, #f0eee6, #dedcd3, #d97757, #c25f3f, #1f1e1d |
-| color.opener | Background, rule and number colour of each part opener, in order | dusty blue #c6d2de, dusty lavender #cfcddc, then repeat |
+| color | ink, ink2, ink3, paper, panel, line, accent, accentText, cover | #1E1C1B, #5e5d59, #8f8d87, #FAF9F5, #f0eee6, #dedcd3, #d97757, #c25f3f, #1E1C1B |
+| color.opener | Background, rule and number colour of each part opener, in order | dusty blue #C5D3E0, dusty lavender #cfcddc, then repeat |
 | color.priority | Fill, border and text of each badge level | must: orange tint; should: grey tint; extra: outline only |
-| font | serif, sans, mono, logo (each a stack: Latin font first, Thai font as the fallback for Thai glyphs) | serif: Noto Serif + Noto Serif Thai; sans: IBM Plex Sans + IBM Plex Sans Thai; mono: IBM Plex Mono; logo: Barlow Condensed |
-| size | coverTitle, chapterTitle, h3, lead, body, table, label, caption | 44, 24, 15, 13, 10, 8.5, 7.5, 8 pt |
-| lineHeight | body, lead, table | 18, 22, 14 pt |
+| font | Three roles (serif, sans, mono) plus logo. Each of serif and sans is a pair: a Latin face and a Thai face. Each face has weights for display (light), text (regular) and bold, and its own `sizeAdjust` and ascent, descent and line-gap overrides (section 5.5) | serif: Source Serif 4 (optical size around 20) + Noto Serif Thai; sans: Inter + Noto Sans Thai; mono: JetBrains Mono; logo: Barlow Condensed |
+| size | body, lead, chapterTitle, h2, minorHeading, table, label, caption, partNumber, partTitle, coverTitle | 12.5, 17, 32-36 (light), 22, 9.5-10 (bold sans), 10.5, 9, 9, 135 (light), 57, 50-60 (light) pt |
+| lineHeight | body, lead, table | 18.75, 23.5, 14.3 pt |
+| contents | Row pitch | 51.7 pt |
 | space | Spacing scale | 4, 8, 12, 16, 24, 32, 48 pt |
-| page | size, marginX, marginTop, marginBottom | A4, 22, 24, 26 mm |
+| page | size, marginX, firstLineTop, footerText, footerRule | US Letter (612 x 792 pt), 72 pt, about 61 pt from the top (first text line on continuation pages), about 751 pt, hairline at about 742 pt |
 | block | hang (ID column), gap, badgeColumn | 20 mm, 16 pt, 14 mm |
 | art | stroke, strokeWidth, wobble, paper | #1f1e1d, 9, 3.2, #f4f3ee |
 
-A document can override any token in its front matter (section 4). Tokens it does not override come from this file.
+A4 is allowed as an option for `page.size`. A document can override any token in its front matter (section 4). Tokens it does not override come from this file.
+
+All fonts in the default are SIL OFL and were chosen by measurement (sections 2 and 6a). The default Thai serif is a fallback: a looped Thai text face with a true light weight and low stroke contrast is recommended when available. Commercial fonts are supplied by the user from a local folder (section 1).
 
 ## 4. Markdown front matter
 
@@ -115,12 +123,26 @@ The header names that trigger each style are configurable, so tables written in 
 
 In-document links such as `[Section 14](#14-…)` must jump to their target in the PDF. Anchors use short ASCII ids, because long Thai ids make some PDF readers fail to find the target.
 
+### 5.5 Thai typography with substituted fonts
+
+- Set `sizeAdjust` so the Thai consonant height sits level with the Latin x-height or cap height on the same line. Set ascent and descent overrides on the Latin faces so baselines do not move when fonts change.
+- Never letter-space Thai. Tracking is only for Latin-only labels.
+- After any font change, check the marks above and below the letters at every line pitch in use (body, lead, table, headings, titles). If marks collide, raise the line-height only for the element that collides, to the smallest value that clears, and record it as a token.
+- Some commercial Thai fonts have small x-heights and need `sizeAdjust` above 120%.
+
 ## 6. Hand-drawn art
 
 - One thick wobbly stroke per shape, as if drawn by a child, with the line overshooting where it closes, on an irregular off-white paper shape.
 - Base shapes at the start: truck, checklist, phone, card, gear, chart, people, document. All are drawn new.
 - A fixed seed, so every build gives the same image.
 - Output is SVG.
+
+## 6a. Matching a reference layout
+
+- Take only the layout system from a reference: page size, margins, type sizes and pitches, colours, rule weights and page structure.
+- Never copy the reference's fonts (not even extracted from the PDF), logos, wordmarks, illustrations or text.
+- Fonts in a reference PDF are usually proprietary and only partially embedded, so they cannot be reused.
+- Record the measured values in the tokens (`nf-docs compare` writes them next to the current tokens). Keep the comparison images out of the repository if the reference is not openly licensed.
 
 ## 7. Open-source hygiene
 
@@ -137,6 +159,7 @@ Claude must:
 3. Never change the document's wording.
 4. Run `nf-docs check` and report the result before handing over.
 5. Never put document content into this repository.
+6. Never download fonts from unofficial sources. Ask the user for licensed files, keep them outside the repository, and show a comparison image (`nf-docs fonts` or `nf-docs compare`) before switching the document's fonts.
 
 ## 9. Automated checks (`nf-docs check`)
 
@@ -149,6 +172,10 @@ Claude must:
 | Line breaks | Short label cells and IDs stay on one line |
 | Contents | Every row has the same height, and space above and below the ink is equal as in section 5.1 |
 | Letter-spacing | None on Thai text |
+| Measured values | Edges, body pitch, contents row pitch and footer position match the token targets within 1 pt |
+| Baselines | After a font change, no baseline moves by more than 0.5 pt |
+| Thai marks | No mark collision at any line pitch in use (checked at 300 dpi) |
+| Font licences | Every embedded font allows embedding (fsType), and no commercial font file is present in the repository |
 
 ## 10. Out of scope
 
